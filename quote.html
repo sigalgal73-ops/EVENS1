@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הצעת מחיר – Even's</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --sage: #5C7A5C; --sage-dark: #3D5C3D; --sage-pale: #EBF0EB; --sage-mid: #D4E0D4;
+  --warm: #8B6914; --warm-light: #C49A2A; --warm-pale: #F5EDD4; --warm-mid: #E8D4A0;
+  --cream: #FAF7F0; --brown: #3A2E1E; --brown-mid: #6B5740;
+  --text: #2C2218; --muted: #7A6A58; --border: #D8CEB8; --border-light: #EAE3D0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Heebo', sans-serif; background: #F0EDE5; color: var(--text); min-height: 100vh; padding: 40px 16px; }
+
+.page-wrap { max-width: 720px; margin: 0 auto; }
+
+/* LOADING */
+.loading { text-align: center; padding: 80px 20px; color: var(--muted); }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid var(--sage-pale); border-top-color: var(--sage); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* QUOTE DOCUMENT */
+.quote-doc { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
+
+.qdoc-header { background: var(--sage-dark); padding: 32px 40px 28px; color: white; display: flex; align-items: flex-start; justify-content: space-between; }
+.qdoc-logo { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; letter-spacing: 0.5px; }
+.qdoc-tagline { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 4px; letter-spacing: 2px; }
+.qdoc-meta-right { text-align: left; font-size: 12px; color: rgba(255,255,255,0.7); line-height: 2; }
+.qdoc-meta-right strong { color: var(--warm-light); font-size: 13px; }
+
+.qdoc-body { padding: 32px 40px; }
+
+.qdoc-greeting { font-size: 15px; margin-bottom: 28px; line-height: 1.8; color: var(--brown); }
+.qdoc-greeting strong { color: var(--sage-dark); }
+
+.qdoc-section { margin-bottom: 28px; }
+.qdoc-section-title { font-size: 10px; letter-spacing: 2.5px; font-weight: 700; color: var(--sage); text-transform: uppercase; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1.5px solid var(--sage-pale); }
+
+.qdoc-row { display: flex; gap: 12px; padding: 9px 0; font-size: 13px; border-bottom: 1px solid var(--border-light); align-items: baseline; }
+.qdoc-row:last-child { border-bottom: none; }
+.qdoc-key { color: var(--muted); min-width: 140px; font-size: 12px; }
+.qdoc-val { color: var(--text); font-weight: 500; }
+
+.price-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+.price-table th { background: var(--sage-dark); color: white; padding: 10px 14px; text-align: right; font-weight: 500; font-size: 11px; letter-spacing: 0.5px; }
+.price-table td { padding: 11px 14px; border-bottom: 1px solid var(--border-light); }
+.price-table tr:nth-child(even) td { background: var(--cream); }
+.price-table tr:last-child td { border-bottom: none; }
+.price-table .pamount { font-weight: 700; color: var(--sage-dark); direction: ltr; }
+
+.total-row { display: flex; justify-content: space-between; align-items: center; background: var(--sage-dark); color: white; padding: 16px 20px; border-radius: 10px; margin-top: 16px; }
+.total-label { font-size: 13px; color: rgba(255,255,255,0.7); }
+.total-vat { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+.total-amount { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--warm-light); }
+
+.terms-box { background: var(--warm-pale); border: 1px solid var(--warm-mid); border-radius: 10px; padding: 16px 20px; font-size: 12px; color: var(--brown-mid); line-height: 1.9; }
+.terms-box strong { color: var(--warm); }
+
+.notes-box { background: var(--cream); border: 1px solid var(--border-light); border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.7; }
+
+.closing { font-size: 13px; color: var(--muted); line-height: 1.8; margin-top: 0; }
+
+.qdoc-footer { background: var(--sage-dark); padding: 20px 40px; color: rgba(255,255,255,0.65); font-size: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.qdoc-footer a { color: var(--warm-light); text-decoration: none; }
+.footer-logo { font-family: 'Playfair Display', serif; color: white; font-size: 16px; font-weight: 600; }
+
+/* PRINT BUTTON */
+.print-bar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px; }
+.btn-print { background: var(--sage-dark); color: white; border: none; padding: 11px 22px; border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+.btn-print:hover { background: #2B4A2B; }
+
+/* PRINT STYLES */
+@media print {
+  body { background: white; padding: 0; }
+  .print-bar { display: none; }
+  .quote-doc { box-shadow: none; border-radius: 0; }
+  .page-wrap { max-width: 100%; }
+}
+
+/* ERROR */
+.error-box { background: white; border-radius: 12px; padding: 60px 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.error-icon { font-size: 48px; margin-bottom: 16px; }
+.error-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.error-msg { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="print-bar" id="printBar" style="display:none">
+    <button class="btn-print" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div>טוען את הצעת המחיר שלך...</div>
+  </div>
+
+  <div id="quoteContent" style="display:none"></div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://fzkozgycsteoftvhqujj.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a296Z3ljc3Rlb2Z0dmhxdWpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQxODUsImV4cCI6MjA5NDEyMDE4NX0.moRw4VDFm2zBXBlCueJrre0FXryGy_CnCn8c_oM_lq8";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const MENU_LABELS = {
+  light_morning:"ארוחת בוקר קלה + צהריים",
+  full_morning:"ארוחת בוקר מלאה + צהריים",
+  morning_only:"ארוחת בוקר קלה",
+  full_morning_only:"ארוחת בוקר מלאה",
+  coffee_only:"מזנון קפה ושתייה"
+};
+const MENU_PRICES = { light_morning:195, full_morning:225, morning_only:85, full_morning_only:115, coffee_only:45 };
+
+async function loadQuote() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (!id) { showError("קישור לא תקין", "לא נמצא מזהה הצעה בקישור."); return; }
+
+  const { data, error } = await sb.from("quotes").select("*").eq("id", id).single();
+  if (error || !data) { showError("הצעה לא נמצאה", "ייתכן שהקישור פג תוקף או שגוי."); return; }
+
+  renderQuote(data);
+}
+
+function renderQuote(q) {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("printBar").style.display = "flex";
+
+  const dateHe = q.event_date ? new Date(q.event_date).toLocaleDateString("he-IL") : "—";
+  const createdHe = new Date(q.created_at).toLocaleDateString("he-IL");
+  const menuLabel = MENU_LABELS[q.menu] || q.menu || "—";
+  const menuPrice = MENU_PRICES[q.menu] || 0;
+
+  let priceRows = "";
+  let total = 0;
+  if (q.menu && q.guests) {
+    const mt = menuPrice * q.guests; total += mt;
+    priceRows += `<tr><td>${menuLabel}</td><td style="text-align:center">${q.guests} אורחים</td><td class="pamount">${menuPrice} ₪</td><td class="pamount">${mt.toLocaleString("he-IL")} ₪</td></tr>`;
+    if (q.add_fruits) { const ft=15*q.guests; total+=ft; priceRows+=`<tr><td>תוספת פירות</td><td style="text-align:center">${q.guests} אורחים</td><td class="pamount">15 ₪</td><td class="pamount">${ft.toLocaleString("he-IL")} ₪</td></tr>`; }
+    if (q.add_mehadrin) { const mht=35*q.guests+150; total+=mht; priceRows+=`<tr><td>מנה מהדרין + הובלה</td><td style="text-align:center">${q.guests} מנות</td><td class="pamount">35 ₪+150</td><td class="pamount">${mht.toLocaleString("he-IL")} ₪</td></tr>`; }
+  }
+
+  const notesHtml = q.notes ? `
+    <div class="qdoc-section">
+      <div class="qdoc-section-title">הערות ובקשות מיוחדות</div>
+      <div class="notes-box">${q.notes}</div>
+    </div>` : "";
+
+  const hallHtml = q.hall ? `<div class="qdoc-row"><span class="qdoc-key">אולם:</span><span class="qdoc-val">${q.hall}</span></div>` : "";
+
+  const html = `
+  <div class="quote-doc">
+    <div class="qdoc-header">
+      <div>
+        <div class="qdoc-logo">Even's</div>
+        <div class="qdoc-tagline">אירוח • תרבות • תיבול | בית נחמיה</div>
+      </div>
+      <div class="qdoc-meta-right">
+        <div>תאריך הצעה: <strong>${createdHe}</strong></div>
+        <div>מס׳ הצעה: <strong>${q.quote_number||"—"}</strong></div>
+        <div>תוקף הצעה: 14 יום</div>
+      </div>
+    </div>
+    <div class="qdoc-body">
+      <div class="qdoc-greeting">
+        שלום ${q.client_name} הנכבד/ה,<br><br>
+        תודה על פנייתכם ועל העניין בשירותינו.<br>
+        להלן הצעת המחיר המבוקשת עבור <strong>${q.company_name||""}</strong>:
+      </div>
+
+      <div class="qdoc-section">
+        <div class="qdoc-section-title">פרטי הלקוח</div>
+        <div class="qdoc-row"><span class="qdoc-key">שם:</span><span class="qdoc-val">${q.client_name||"—"}</span></div>
+        <div class="qdoc-row"><span class="qdoc-key">חברה:</span><span class="qdoc-val">${q.company_name||"—"}</span></div>
+        <div class="qdoc-row"><span class="qdoc-key">טלפון:</span><span class="qdoc-val">${q.phone||"—"}</span></div>
+        <div class="qdoc-row"><span class="qdoc-key">מייל:</span><span class="qdoc-val">${q.email||"—"}</span></div>
+      </div>
+
+      <div class="qdoc-section">
+        <div class="qdoc-section-title">פרטי האירוע</div>
+        <div class="qdoc-row"><span class="qdoc-key">תאריך:</span><span class="qdoc-val">${dateHe}</span></div>
+        <div class="qdoc-row"><span class="qdoc-key">שעות:</span><span class="qdoc-val">${q.start_time||"—"} – ${q.end_time||"—"}</span></div>
+        <div class="qdoc-row"><span class="qdoc-key">סוג אירוע:</span><span class="qdoc-val">${q.event_type||"—"}</span></div>
+        <div class="qdoc-row"><span class="qdoc-key">מספר אורחים:</span><span class="qdoc-val">${q.guests||"—"} אורחים</span></div>
+        ${hallHtml}
+      </div>
+
+      <div class="qdoc-section">
+        <div class="qdoc-section-title">פירוט מחיר</div>
+        <table class="price-table">
+          <thead><tr><th>פריט</th><th style="width:100px;text-align:center">כמות</th><th style="width:100px;text-align:left">מחיר ליחידה</th><th style="width:110px;text-align:left">סה״כ</th></tr></thead>
+          <tbody>${priceRows}</tbody>
+        </table>
+        <div class="total-row">
+          <div><div class="total-label">סה״כ להצעה</div><div class="total-vat">לא כולל מע״מ</div></div>
+          <div class="total-amount">${total.toLocaleString("he-IL")} ₪</div>
+        </div>
+      </div>
+
+      ${notesHtml}
+
+      <div class="qdoc-section">
+        <div class="qdoc-section-title">תנאי ביטול ותשלום</div>
+        <div class="terms-box">
+          <strong>תשלום:</strong> שוטף +30. התאריך ישוריין בחתימת ההזמנה.<br>
+          <strong>ביטול מעל 4 ימי עסקים:</strong> ללא עלות &nbsp;|&nbsp; <strong>2-4 ימים:</strong> 25% &nbsp;|&nbsp; <strong>יום לפני:</strong> 50% &nbsp;|&nbsp; <strong>ביום האירוע:</strong> 100%<br>
+          <strong>שינוי כמות מוזמנים (כלפי מטה):</strong> עד 3 ימי עסקים לפני האירוע.<br>
+          המחיר יחושב לפי מספר האורחים בהזמנה או בפועל — הגבוה מביניהם.
+        </div>
+      </div>
+
+      <div class="closing">
+        אנו נעשה הכל כדי להנעים את שהותכם ולהפוך את האירוע לחוויה בלתי נשכחת.<br>
+        לכל שאלה ניתן לפנות אלינו בוואטסאפ או במייל — נשמח לעמוד לשירותכם!
+      </div>
+    </div>
+    <div class="qdoc-footer">
+      <div class="footer-logo">Even's</div>
+      <div>דרך הכלנית 38, בית נחמיה</div>
+      <div><a href="mailto:michal@evens.co.il">michal@evens.co.il</a></div>
+      <div>052-4763530</div>
+      <div><a href="https://www.evens.co.il">www.evens.co.il</a></div>
+    </div>
+  </div>`;
+
+  document.getElementById("quoteContent").innerHTML = html;
+  document.getElementById("quoteContent").style.display = "block";
+  document.title = `הצעת מחיר – Even's | ${q.client_name}`;
+}
+
+function showError(title, msg) {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("quoteContent").innerHTML = `
+    <div class="error-box">
+      <div class="error-icon">😕</div>
+      <div class="error-title">${title}</div>
+      <div class="error-msg">${msg}</div>
+    </div>`;
+  document.getElementById("quoteContent").style.display = "block";
+}
+
+loadQuote();
+</script>
+</body>
+</html>

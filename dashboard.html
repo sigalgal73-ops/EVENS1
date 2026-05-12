@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Even's – לוח ניהול הצעות</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --sage: #5C7A5C; --sage-dark: #3D5C3D; --sage-pale: #EBF0EB;
+  --warm: #8B6914; --warm-light: #C49A2A; --warm-pale: #F5EDD4;
+  --cream: #FAF7F0; --brown: #3A2E1E; --brown-mid: #6B5740;
+  --text: #2C2218; --muted: #7A6A58; --border: #D8CEB8; --border-light: #EAE3D0;
+  --white: #FFFFFF;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Heebo', sans-serif; background: var(--cream); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+.header { background: var(--sage-dark); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; height: 64px; }
+.logo-area { display: flex; align-items: center; gap: 14px; }
+.logo-circle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: white; background: rgba(255,255,255,0.1); }
+.logo-text { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+.logo-sub { font-size: 11px; color: rgba(255,255,255,0.6); letter-spacing: 1.5px; margin-top: 1px; }
+.btn-new { background: var(--warm-light); color: white; border: none; padding: 9px 18px; border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+.btn-new:hover { background: var(--warm); }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 18px 20px; }
+.stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--sage-dark); }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* TABLE CARD */
+.table-card { background: white; border: 1px solid var(--border-light); border-radius: 10px; overflow: hidden; }
+.table-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-light); }
+.table-title { font-size: 14px; font-weight: 700; color: var(--sage-dark); }
+.search-input { padding: 8px 14px; border: 1px solid var(--border); border-radius: 7px; font-family: 'Heebo', sans-serif; font-size: 13px; color: var(--text); background: var(--cream); width: 220px; }
+.search-input:focus { outline: none; border-color: var(--sage); }
+
+.quotes-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.quotes-table th { background: var(--sage-dark); color: white; padding: 11px 14px; text-align: right; font-weight: 500; font-size: 11px; letter-spacing: 0.5px; white-space: nowrap; }
+.quotes-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+.quotes-table tr:last-child td { border-bottom: none; }
+.quotes-table tr:hover td { background: var(--sage-pale); cursor: pointer; }
+
+.status-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.status-נשלחה { background: #EBF0EB; color: #3D5C3D; }
+.status-ממתין { background: #F5EDD4; color: #8B6914; }
+.status-אושר { background: #E8F4F0; color: #1A6B4A; }
+.status-בוטל { background: #FCE8E8; color: #8B3A3A; }
+
+.amount-cell { font-weight: 700; color: var(--sage-dark); direction: ltr; }
+.link-cell a { color: var(--sage); font-size: 11px; text-decoration: none; border: 1px solid var(--sage); padding: 3px 8px; border-radius: 5px; }
+.link-cell a:hover { background: var(--sage); color: white; }
+
+.loading { text-align: center; padding: 60px; color: var(--muted); }
+.empty { text-align: center; padding: 60px; color: var(--muted); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--sage-dark); color: white; padding: 12px 24px; border-radius: 100px; font-size: 13px; font-weight: 500; box-shadow: 0 8px 28px rgba(0,0,0,0.2); transition: transform 0.35s cubic-bezier(0.175,0.885,0.32,1.275); z-index: 9999; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .quotes-table th:nth-child(4), .quotes-table td:nth-child(4),
+  .quotes-table th:nth-child(5), .quotes-table td:nth-child(5) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-area">
+    <div class="logo-circle">E's</div>
+    <div>
+      <div class="logo-text">Even's</div>
+      <div class="logo-sub">לוח ניהול הצעות מחיר</div>
+    </div>
+  </div>
+  <a class="btn-new" href="index.html">+ הצעה חדשה</a>
+</div>
+
+<div class="container">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">סה״כ הצעות</div>
+      <div class="stat-num" id="statTotal">—</div>
+      <div class="stat-sub">כל הזמן</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">נשלחו החודש</div>
+      <div class="stat-num" id="statMonth">—</div>
+      <div class="stat-sub" id="statMonthName">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">סה״כ ערך הצעות</div>
+      <div class="stat-num" id="statValue">—</div>
+      <div class="stat-sub">לא כולל מע״מ</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ממוצע להצעה</div>
+      <div class="stat-num" id="statAvg">—</div>
+      <div class="stat-sub">₪ לאורח ממוצע</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-title">📋 כל ההצעות</div>
+      <input class="search-input" id="searchInput" type="text" placeholder="חיפוש לפי שם / חברה..." oninput="filterTable()">
+    </div>
+    <div id="tableWrap">
+      <div class="loading">⏳ טוען הצעות...</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://fzkozgycsteoftvhqujj.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a296Z3ljc3Rlb2Z0dmhxdWpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQxODUsImV4cCI6MjA5NDEyMDE4NX0.moRw4VDFm2zBXBlCueJrre0FXryGy_CnCn8c_oM_lq8";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allQuotes = [];
+
+async function loadQuotes() {
+  const { data, error } = await sb.from("quotes").select("*").order("created_at", { ascending: false });
+  if (error) { document.getElementById("tableWrap").innerHTML = `<div class="empty"><div class="empty-icon">❌</div>שגיאה בטעינה</div>`; return; }
+  allQuotes = data || [];
+  renderStats(allQuotes);
+  renderTable(allQuotes);
+}
+
+function renderStats(quotes) {
+  document.getElementById("statTotal").textContent = quotes.length;
+  const now = new Date();
+  const monthQuotes = quotes.filter(q => { const d = new Date(q.created_at); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); });
+  document.getElementById("statMonth").textContent = monthQuotes.length;
+  document.getElementById("statMonthName").textContent = now.toLocaleDateString("he-IL",{month:"long"});
+  const totalVal = quotes.reduce((s,q) => s+(q.total_price||0), 0);
+  document.getElementById("statValue").textContent = totalVal > 0 ? totalVal.toLocaleString("he-IL")+" ₪" : "—";
+  const avg = quotes.length > 0 ? Math.round(totalVal / quotes.length) : 0;
+  document.getElementById("statAvg").textContent = avg > 0 ? avg.toLocaleString("he-IL")+" ₪" : "—";
+}
+
+function renderTable(quotes) {
+  if (quotes.length === 0) {
+    document.getElementById("tableWrap").innerHTML = `<div class="empty"><div class="empty-icon">📋</div>אין הצעות עדיין<br><small>לחצי "+ הצעה חדשה" כדי להתחיל</small></div>`;
+    return;
+  }
+  const rows = quotes.map(q => {
+    const dateHe = q.event_date ? new Date(q.event_date).toLocaleDateString("he-IL") : "—";
+    const createdHe = new Date(q.created_at).toLocaleDateString("he-IL");
+    const amount = q.total_price ? q.total_price.toLocaleString("he-IL")+" ₪" : "—";
+    const statusClass = "status-"+(q.status||"נשלחה");
+    const quoteUrl = `quote.html?id=${q.id}`;
+    return `<tr onclick="window.open('${quoteUrl}','_blank')">
+      <td>${createdHe}</td>
+      <td><strong>${q.client_name||"—"}</strong><br><small style="color:var(--muted)">${q.company_name||""}</small></td>
+      <td>${dateHe}</td>
+      <td>${q.event_type||"—"}</td>
+      <td>${q.guests||"—"}</td>
+      <td class="amount-cell">${amount}</td>
+      <td><span class="status-badge ${statusClass}">${q.status||"נשלחה"}</span></td>
+      <td class="link-cell" onclick="event.stopPropagation()"><a href="${quoteUrl}" target="_blank">👁️ צפה</a></td>
+    </tr>`;
+  }).join("");
+  document.getElementById("tableWrap").innerHTML = `
+    <table class="quotes-table">
+      <thead><tr>
+        <th>תאריך יצירה</th><th>לקוח</th><th>תאריך אירוע</th><th>סוג</th><th>אורחים</th><th>סכום</th><th>סטטוס</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function filterTable() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const filtered = allQuotes.filter(r =>
+    (r.client_name||"").toLowerCase().includes(q) ||
+    (r.company_name||"").toLowerCase().includes(q) ||
+    (r.email||"").toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+loadQuotes();
+</script>
+</body>
+</html>
