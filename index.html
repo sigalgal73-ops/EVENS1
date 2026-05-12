@@ -303,7 +303,7 @@ textarea.finput { resize: vertical; min-height: 76px; line-height: 1.5; }
               </div>
             </div>
             <div class="qdoc-body">
-              <div class="qdoc-greeting" id="qGreeting">שלום רב,<br><br>תודה על פנייתכם ועל העניין בשירותינו. להלן הצעת המחיר המבוקשת:</div>
+              <div class="qdoc-greeting" id="qGreeting">היי,<br><br>תודה שבחרת ב-Even's!<br>מצורפת הצעת המחיר — כל הפרטים למטה.</div>
               <div class="qdoc-section">
                 <div class="qdoc-section-title">פרטי הלקוח</div>
                 <div class="qdoc-row"><span class="qdoc-key">שם:</span><span class="qdoc-val" id="qName">—</span></div>
@@ -343,7 +343,7 @@ textarea.finput { resize: vertical; min-height: 76px; line-height: 1.5; }
                 </div>
               </div>
               <div class="qdoc-greeting" style="margin-top:0;color:var(--muted);font-size:12px;">
-                אנו נעשה הכל כדי להנעים את שהותכם.<br>לכל שאלה — וואטסאפ או מייל.
+                שאלות, שינויים, בקשות? אנחנו כאן.<br>נשמח לראות אתכם אצלנו 🌿<br><strong>מיכל | Even's</strong>
               </div>
             </div>
             <div class="qdoc-footer">
@@ -436,7 +436,7 @@ function previewUpdate() {
   const fruits=document.getElementById("addFruits").checked, mehad=document.getElementById("addMehadrin").checked;
   document.getElementById("previewTo").textContent = email && name ? `${name} <${email}>` : (email||"—");
   document.getElementById("previewSubject").textContent = `הצעת מחיר – Even's אירוח${type?" | "+type:""}`;
-  if (name) document.getElementById("qGreeting").innerHTML = `שלום ${name} הנכבד/ה,<br><br>תודה על פנייתכם. להלן הצעת המחיר עבור <strong>${company||"החברה"}</strong>:`;
+  if (name) document.getElementById("qGreeting").innerHTML = `היי ${name} 👋<br><br>תודה שבחרת ב-Even's!<br>מצורפת הצעת המחיר עבור <strong>${company||"החברה"}</strong> — כל הפרטים למטה.`;
   setText("qName",name); setText("qCompany",company); setText("qPhone",phone); setText("qEmail",email);
   setText("qDate", date ? new Date(date).toLocaleDateString("he-IL") : "—");
   setText("qHours", start&&end ? `${start} – ${end}` : "—");
